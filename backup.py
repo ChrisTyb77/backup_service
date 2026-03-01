@@ -242,9 +242,14 @@ def main() -> int:
         log.error("No remotes defined in config.")
         return 1
 
+    named_sources: dict[str, str] = {s["name"]: s["path"] for s in config.get("sources", [])}
     global_opts: dict = config.get("options", {})
     global_keep: int = config.get("keep_versions", 0)
     jobs: list[dict] = config.get("jobs", [])
+
+    for job in jobs:
+        if "source" in job and job["source"] in named_sources:
+            job["source"] = named_sources[job["source"]]
 
     if args.job:
         jobs = [j for j in jobs if j.get("name") == args.job]

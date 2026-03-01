@@ -7,6 +7,17 @@
 #
 # Then use that crypt remote name here as the path.
 
+# Remote sources — data on other devices accessed over SSH/SFTP.
+# First configure an SFTP remote in rclone:
+#
+#   rclone config  →  New remote → type: sftp
+#   host: 192.168.1.10  user: user  (key auth recommended)
+#
+# Then reference the rclone remote name here.
+sources:
+  - name: homeserver
+    path: "homeserver-sftp:/home/user"
+
 remotes:
   - name: idrive
     path: "backups:backup" # rclone crypt remote — encrypted transparently
@@ -67,3 +78,14 @@ jobs:
   #     - /home/user/.config/starship.toml
   #     - /etc/fstab
   #   remotes: [gdrive]
+
+  # Backup from another device via SSH.
+  # "homeserver" is resolved to "homeserver-sftp:/home/user/documents"
+  # - name: server-documents
+  #   source: "homeserver-sftp:/home/user/documents"
+  #   remotes: [idrive, mydisk]
+  #
+  # Or use a named source (defined in the sources section above):
+  # - name: server-projects
+  #   source: homeserver             # expands to homeserver-sftp:/home/user
+  #   remotes: [idrive, mydisk]
