@@ -126,6 +126,17 @@ def _prune_remote(versions_root: str, keep: int, dry_run: bool) -> None:
         subprocess.run(cmd)
 
 
+def _run_command(label: str, command: str, dry_run: bool) -> bool:
+    log.info("Running %s: %s", label, command)
+    if dry_run:
+        return True
+    result = subprocess.run(command, shell=True)
+    if result.returncode != 0:
+        log.error("%s failed (exit %d).", label, result.returncode)
+        return False
+    return True
+
+
 def run_job(job: dict, remotes: dict, global_opts: dict, global_keep: int, dry_run: bool) -> bool:
     job_opts = job.get("options", {})
     target_remotes = _resolve_remotes(job, remotes)
@@ -136,13 +147,23 @@ def run_job(job: dict, remotes: dict, global_opts: dict, global_keep: int, dry_r
         log.warning("Job '%s': no matching remotes found, skipping.", job_id)
         return True
 
-    if "files" in job:
-        return _run_files_job(job, target_remotes, global_opts, job_opts, keep_versions, dry_run)
-    elif "source" in job:
-        return _run_source_job(job, target_remotes, global_opts, job_opts, keep_versions, dry_run)
-    else:
-        log.error("Job '%s': must have either 'source' or 'files'.", job_id)
+    pre = job.get("pre_command")
+    post = job.get("post_command")
+
+    if pre and not _run_command("pre_command", pre, dry_run):
         return False
+
+    try:
+        if "files" in job:
+            return _run_files_job(job, target_remotes, global_opts, job_opts, keep_versions, dry_run)
+        elif "source" in job:
+            return _run_source_job(job, target_remotes, global_opts, job_opts, keep_versions, dry_run)
+        else:
+            log.error("Job '%s': must have either 'source' or 'files'.", job_id)
+            return False
+    finally:
+        if post:
+            _run_command("post_command", post, dry_run)
 
 
 def _run_source_job(

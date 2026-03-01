@@ -79,6 +79,22 @@ jobs:
   #     - /etc/fstab
   #   remotes: [gdrive]
 
+  # Database backups from Docker containers.
+  # Stop container → backup data dir → start container again.
+  # post_command always runs, even if the backup fails.
+  # - name: postgres
+  #   pre_command: "docker stop my-postgres"
+  #   post_command: "docker start my-postgres"
+  #   source: /var/lib/docker/volumes/my-postgres/_data
+  #   remotes: [idrive, mydisk]
+
+  # Remote Docker container — stop on remote, backup via SFTP, start again.
+  # - name: server-postgres
+  #   pre_command: "ssh user@192.168.1.10 'docker stop my-postgres'"
+  #   post_command: "ssh user@192.168.1.10 'docker start my-postgres'"
+  #   source: "homeserver-sftp:/var/lib/docker/volumes/my-postgres/_data"
+  #   remotes: [idrive, mydisk]
+
   # Backup from another device via SSH.
   # "homeserver" is resolved to "homeserver-sftp:/home/user/documents"
   # - name: server-documents
