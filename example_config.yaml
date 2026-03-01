@@ -1,0 +1,69 @@
+# rclone backup configuration
+
+# Remotes map to rclone remote names. Encryption is handled entirely by rclone —
+# just point path to a crypt remote if you want encrypted backups:
+#
+#   rclone config  →  New remote → type: crypt → remote: gdrive:backups-encrypted
+#
+# Then use that crypt remote name here as the path.
+
+remotes:
+  - name: idrive
+    path: "backups:backup" # rclone crypt remote — encrypted transparently
+
+locals:
+  - name: mydisk
+    path: ~/backups
+
+# Keep last N backup versions globally (0 = no versioning, overwrite in place)
+# Can be overridden per-job with keep_versions: N
+keep_versions: 5
+
+# Global rclone options applied to all jobs (optional)
+options:
+  transfers: 4
+  checkers: 8
+  progress: true
+  log-level: INFO
+
+jobs:
+  - name: documents
+    source: ~/Projects/backup_service/test_sources
+    operation: copy
+    remotes: [idrive, mydisk] # mix of remotes and locals
+    options:
+      exclude:
+        - "*.tmp"
+
+  # - name: documents
+  #   source: /home/user/documents
+  #   operation: sync
+  #   remotes: [idrive, mydisk] # mix of remotes and locals
+  #   options:
+  #     exclude:
+  #       - "*.tmp"
+  #       - ".Trash-*"
+
+  # - name: projects
+  #   source: /home/user/projects
+  #   remotes: [gdrive]
+  #   options:
+  #     exclude:
+  #       - "node_modules/**"
+  #       - ".git/**"
+  #       - "__pycache__/**"
+  #       - "*.pyc"
+
+  # - name: photos
+  #   source: /home/user/pictures
+  #   operation: copy # copy keeps files on remote even if deleted locally
+  #   remotes: [s3]
+  #   keep_versions: 10 # override global: keep more versions for photos
+
+  # - name: dotfiles
+  #   files:
+  #     - /home/user/.bashrc
+  #     - /home/user/.vimrc
+  #     - /home/user/.config/starship.toml
+  #     - /etc/fstab
+  #   remotes: [gdrive]
